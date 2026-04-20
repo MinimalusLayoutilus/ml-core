@@ -1,0 +1,23 @@
+{
+    "name": "mnhcc/ml-core",
+    "description": "Minimalus Layoutilus — core autoloader, base object model, helpers and config",
+    "type": "library",
+    "license": "LGPL-2.1-only",
+    "authors": [
+        {
+            "name": "Michael Hegenbarth (carschrotter)",
+            "email": "mnh@mn-hegenbarth.de"
+        }
+    ],
+    "require": {
+        "php": ">=5.4"
+    },
+    "autoload": {
+        "classmap": [
+            "classes/",
+            "interfaces/",
+            "traits/"
+        ]
+    },
+    "minimum-stability": "stable"
+}

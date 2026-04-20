@@ -33,10 +33,16 @@ namespace mnhcc\ml\traits {
 	    return self::$init;
 	}
 	
+	/**
+	 * @return string
+	 */
 	public function getInstanceID() {
 	    return $this->_instanceID;
 	}
 
+	/**
+	 * @param string $instanceID
+	 */
 	public function setInstanceID($instanceID) {
 	    $this->_instanceID = $instanceID;
 	}
@@ -55,6 +61,12 @@ namespace mnhcc\ml\traits {
 //	   }
 //	}
 //	
+	/**
+	 * Stores an instance under a named key without going through getInstance().
+	 * @param string $instance
+	 * @param object $self
+	 * @throws Exception
+	 */
 	protected static function setInstance($instance, $self) {
 	    if($self instanceof self){
 		self::$_instances[$instance] = $self;
@@ -91,6 +103,13 @@ namespace mnhcc\ml\traits {
 	    return self::$_instances[$instance];
 	}
 	
+	/**
+	 * Like getInstance() but accepts constructor arguments as an array.
+	 * @param string $instance
+	 * @param array  $args
+	 * @param int    $override  INSTANCE_OVERIDE or INSTANCE_NOT_OVERIDE.
+	 * @return static
+	 */
 	public static function &getInstanceArgs($instance = self::DEFAULTINSTANCE,  $args = [], $override = self::INSTANCE_NOT_OVERIDE) {
 	    $args = classes\ArrayHelper::addBefore($args, $override);
 	    $args = classes\ArrayHelper::addBefore($args, $instance);

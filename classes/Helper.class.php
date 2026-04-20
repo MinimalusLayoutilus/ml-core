@@ -25,12 +25,12 @@ namespace mnhcc\ml\classes {
 	\mnhcc\ml\interfaces;
 
     /**
-     * Description of Helper
-     * 
+     * Static utility helpers: debug output, CSS name sanitisation, class existence checks.
+     *
      * @author Michael Hegenbarth (carschrotter)
      * @package MinimalusLayoutilus
      * @copyright (c) 2013, Michael Hegenbarth
-     * @method static mixed debug(mixed $arg, mixed $arg) Variable to display with var_dump()  string to help debug on sucsess, or falso on error.
+     * @method static mixed debug(mixed $arg) Variable to display with var_dump() — debug string on success, false on error.
      * @method static string dump($toggleDump = self::toggleDump)
      */
     abstract class Helper implements interfaces\Prototype {
@@ -44,10 +44,17 @@ namespace mnhcc\ml\classes {
 //	}
 	protected static $_selfDetectMethodFilter = ['getInstance', 'getInstanceArgs', 'newInstanceArgs', 'newInstance'];
 	
+	/**
+	 * @return array
+	 */
 	public static function getSelfDetectMethodFilter() {
 	    return self::$_selfDetectMethodFilter;
 	}
 
+	/**
+	 * @param array $selfDetectMethodFilter
+	 * @throws Exception\InvalidArgumentException
+	 */
 	public static function setSelfDetectMethodFilter($selfDetectMethodFilter) {
 	    if(!Helper::isArray($selfDetectMethodFilter)) {		
 		throw new Exception\InvalidArgumentException(Exception\InvalidArgumentException::TYPE_ARRAY);
@@ -55,10 +62,18 @@ namespace mnhcc\ml\classes {
 	    self::$_selfDetectMethodFilter = $selfDetectMethodFilter;
 	}
 	
+	/**
+	 * @param string $method
+	 */
 	public static function addSelfDetectMethodFilter($method) {
 	    self::$_selfDetectMethodFilter[] = $method;
 	}
 	
+	/**
+	 * Calls $val if callable, otherwise returns it as-is.
+	 * @param mixed $val
+	 * @return mixed
+	 */
 	public static function callOrGet($val) {
 	    return \is_callable($val) ? $val() : $val;
 	}
@@ -103,6 +118,12 @@ namespace mnhcc\ml\classes {
 	    return $temp . '</div>';
 	}
 
+	/**
+	 * Wraps $content in a collapsible container element.
+	 * @param string $content
+	 * @param string $container  HTML element tag name.
+	 * @return string
+	 */
 	public static function toggle($content, $container = 'div') {
 	    $str = '<' . $container . ' class="preview_toggle">';
 	    $str .= $content;
@@ -140,6 +161,11 @@ namespace mnhcc\ml\classes {
 	    return $clean_classname;
 	}
 
+	/**
+	 * Generates a random lowercase alphabetic string to prefix invalid CSS identifiers.
+	 * @param int $lenght  Number of characters (minimum 1).
+	 * @return string
+	 */
 	static public function generateLegitimer($lenght = 3) {
 	    $lenght = (is_int($lenght) && $lenght >= 1) ? $lenght : 3;
 	    $legitimerChars = ['a', 'b', 'c', 'd', 'e',
@@ -154,19 +180,26 @@ namespace mnhcc\ml\classes {
 	    return $legitimer;
 	}
 
+	/** @return bool */
 	static public function checkPost() {
 	    return (bool) count($_POST);
 	}
 
+	/** @return bool */
 	static public function checkGet() {
 	    return (bool) count($_GET);
 	}
 
+	/** @return bool */
 	static public function checkLogin() {
 	    return ( ((bool) Parm::getInstance()->get('S_username', false, 'SESSION')) &&
 		    ((bool) Parm::getInstance()->get('S_userid', false, 'SESSION')) );
 	}
 
+	/**
+	 * @param string $level
+	 * @return bool|null
+	 */
 	static public function checkRight($level = 'user') {
 	    if ($this->checkLogin()) {
 		/* ToDo implenet user rights */
@@ -174,16 +207,29 @@ namespace mnhcc\ml\classes {
 	    }
 	}
 
+	/**
+	 * @deprecated Use ArrayHelper::isArray() instead.
+	 * @param mixed $val
+	 * @return bool
+	 */
 	static public function isArray($val) {
 	    Error::triggerError(__CLASS__ . '::isArray() is deprecated! Pleas use ' . __NAMESPACE__ . '\\ArrayHelper::isArray()', Error::DEPRECATED);
 	    return ArrayHelper::isArray($val);
 	}
 
+	/**
+	 * @param string $string
+	 * @return bool
+	 */
 	static public function isJson1($string) {
 	    json_decode($string);
 	    return (json_last_error() == JSON_ERROR_NONE);
 	}
 
+	/**
+	 * @param string $string
+	 * @return bool
+	 */
 	static public function isJson2($string) {
 	    return !preg_match('/[^,:{}\[\]0-9.\-+Eaeflnr-u \n\r\t]/', preg_replace('/"(\\.|[^"\\])*"/g', '', $string));
 	}
@@ -192,11 +238,21 @@ namespace mnhcc\ml\classes {
 	    // i
 	}
 
+	/**
+	 * @param mixed $value
+	 * @return bool
+	 */
 	static public function isMLConst($value) {
 	    return Bootstrap::isMLConst($value);
 	}
 
 	
+	/**
+	 * @param string $class          Class name, optionally without root namespace.
+	 * @param bool   $autoNamespace  Prepend root namespace automatically.
+	 * @param bool   $autoload
+	 * @return bool
+	 */
 	static public function classExists($class, $autoNamespace = true, $autoload = true) {
 	    if ($autoNamespace) {
 		$class = BootstrapHandler::addRootNamespace($class);
@@ -204,6 +260,12 @@ namespace mnhcc\ml\classes {
 	    return (bool) \class_exists($class, $autoload);
 	}
 	
+	/**
+	 * @param mixed  $object
+	 * @param string $type         Class/interface name or 'self'.
+	 * @param bool   $allow_string  Allow $object to be a class name string.
+	 * @return bool|null  null when $object is not an object and $allow_string is false.
+	 */
 	static public function isTypeof($object, $type, $allow_string = false) {
 	    if(!\is_object($object) && !$allow_string) {
 		return null;
@@ -214,6 +276,10 @@ namespace mnhcc\ml\classes {
 	    \is_subclass_of($object, $type, $allow_string);
 	}
 	
+	/**
+	 * Walks the call stack to determine the class that called the current method.
+	 * @return string|false
+	 */
 	static public function whereIsSelf() {
 	    $self = false;
 	    $backtrace = debug_backtrace(\DEBUG_BACKTRACE_IGNORE_ARGS, 10); //max 8 hops

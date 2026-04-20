@@ -26,14 +26,17 @@ namespace mnhcc\ml\classes{
 
 
     /**
-     * Description of Bootstrap
-     * 
+     * Static helper base for constants and application-namespace class overloading.
+     *
      * @author Michael Hegenbarth (carschrotter)
      * @package MinimalusLayoutilus
      * @copyright (c) 2013, Michael Hegenbarth
      */
     abstract class Bootstrap extends MNHcC{
-	
+
+	/**
+	 * @return bool
+	 */
 	public static function isDebug() {
 	    return ( self::defined('DEBUG') && self::constant('DEBUG') == true);
 	}
@@ -51,14 +54,29 @@ namespace mnhcc\ml\classes{
 	    } else {return false;}
         }
 	
+	/**
+	 * Checks whether a namespaced constant is defined.
+	 * @param string $name
+	 * @return bool
+	 */
 	public static function defined($name) {
 	    return \defined(BH::getRootNamespace(). NSS. $name);
 	}
 	
+	/**
+	 * Returns the value of a namespaced constant.
+	 * @param string $name
+	 * @return mixed
+	 */
 	public static function constant($name) {
 	    return \constant(BH::getRootNamespace(). NSS. $name);
 	}
 	
+	/**
+	 * Returns true if the constant exists and was set via setMLConst().
+	 * @param string $name
+	 * @return bool
+	 */
 	public static function definedML($name) {
 	    if(self::defined($name)) {
 		return self::isMLConst(self::constant($name));
@@ -66,6 +84,12 @@ namespace mnhcc\ml\classes{
 	    return false;
 	}
 	
+	/**
+	 * Stores a value as a JSON-encoded, tamper-detectable namespaced constant.
+	 * @param string $name
+	 * @param mixed  $value
+	 * @return bool
+	 */
 	public static function setMLConst($name, $value) {
 	    $_value = new \stdClass();
 	    $_value->{$name} = $value;
@@ -84,6 +108,12 @@ namespace mnhcc\ml\classes{
 	    return (bool) is_object($content);
 	}
 	
+	/**
+	 * Decodes and returns the value stored by setMLConst().
+	 * @param string     $name
+	 * @param mixed|null $content  Pre-fetched raw constant value; fetched automatically when null.
+	 * @return mixed|null
+	 */
 	static public function valueMLConst($name, $content = null) {
 	    if($content === null) {
 		$content = self::constant($name);
@@ -95,6 +125,11 @@ namespace mnhcc\ml\classes{
 	    return null;
 	}
 	
+	/**
+	 * Returns the application-namespace override of $class if one exists, otherwise $class itself.
+	 * @param string $class  Fully-qualified framework class name.
+	 * @return string
+	 */
 	public static function getOverloadedClass($class) {
 	    if (self::constant('APPLICATIONNAMESPACE')) {
 		$new_class = BH::makeClassName(

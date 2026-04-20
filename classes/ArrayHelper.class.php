@@ -24,19 +24,31 @@ namespace mnhcc\ml\classes {
     use \mnhcc\ml\interfaces\MNHcCArray;
 
     /**
-     * Description of Array
+     * Static utility methods for array operations and type-safe array checks.
      *
      * @author carschrotter
      */
     abstract class ArrayHelper extends MNHcC {
 
+	/** @var array Registered value converters keyed by class name. */
 	protected $_converters = [];
+	/** @var array Alias map for converter class names. */
 	protected $_convertersAliases = [];
-	
+
+	/**
+	 * Registers a converter callable for a given class.
+	 * @param string   $class
+	 * @param callable $func
+	 */
 	static public function setConverter($class, callable $func){
 	    $_converters[$class] = $func;
 	}
 	
+	/**
+	 * @param mixed $key
+	 * @param array $array
+	 * @return bool
+	 */
 	static public function keyExists($key, &$array) {
 	    return \array_key_exists($key, $array);
 	}
@@ -55,14 +67,33 @@ namespace mnhcc\ml\classes {
 	    return \array_pop($array);
 	}
 
+	/**
+	 * Returns the value at $key or $default; calls $default if $call_default is true.
+	 * @param mixed $key
+	 * @param array $array
+	 * @param mixed $default
+	 * @param bool  $call_default  Invoke $default as a callable when true.
+	 * @return mixed
+	 */
 	static public function get($key, $array, $default = null, $call_default = false) {
 	    return self::keyExists($key, $array) ? $array[$key] : ($call_default ? Helper::callOrGet($default) : $default);
 	}
 
+	/**
+	 * @param array  $pieces
+	 * @param string $glue
+	 * @return string
+	 */
 	static public function implode($pieces, $glue = '') {
 	    return \implode($glue, $pieces);
 	}
 	
+	/**
+	 * @param string   $delimiter
+	 * @param string   $string
+	 * @param int|null $limit
+	 * @return array
+	 */
 	static public function explode($delimiter, $string, $limit = null) {
 	    if(null === $limit){return \explode($delimiter, $string);}
 	    return \explode($delimiter, $string, $limit);
@@ -92,15 +123,34 @@ namespace mnhcc\ml\classes {
 	    }
 	}
 
+	/**
+	 * @param array $array
+	 * @return int
+	 */
 	static public function count(&$array) {
 	    return \count($array);
 	}
 
+	/**
+	 * Prepends $value to $arr.
+	 * @param array $arr
+	 * @param mixed $value
+	 * @return array
+	 */
 	static public function addBefore(&$arr, $value) {
 	    \array_unshift($arr, $value);
 	    return $arr;
 	}
 
+	/**
+	 * Checks whether $needle exists in $haystack.
+	 * @param mixed $needle
+	 * @param array|\ArrayAccess $haystack
+	 * @param bool  $strict
+	 * @param bool  $recrisiv  Search recursively when true.
+	 * @return bool
+	 * @throws Exception\InvalidArgumentException
+	 */
 	static public function in($needle, $haystack, $strict = false, $recrisiv = false) {
 	    if(!self::isArray($haystack)) {		
 		throw new Exception\InvalidArgumentException(Exception\InvalidArgumentException::TYPE_ARRAY);
@@ -111,6 +161,12 @@ namespace mnhcc\ml\classes {
 	    return \in_array($needle, $haystack, $strict);
 	}
 
+	/**
+	 * @param mixed $needle
+	 * @param array $haystack
+	 * @param bool  $strict
+	 * @return bool
+	 */
 	static public function inRecursive($needle, &$haystack, $strict = false) {
 	    $answer = false;
 	    $func = function($item, $key) use($needle, $strict, $answer) {
@@ -128,6 +184,11 @@ namespace mnhcc\ml\classes {
 	    return $answer;
 	}
 
+	/**
+	 * Returns true for real arrays or ArrayAccess objects (returns 1 for ArrayAccess).
+	 * @param mixed $val
+	 * @return bool|int
+	 */
 	static public function isArray($val) {
 	    if (\is_object($val)) {
 		return ($val instanceof \ArrayAccess) ? 1 : false ;
@@ -135,10 +196,20 @@ namespace mnhcc\ml\classes {
 	    return (bool) \is_array($val);
 	}
 	
+	/**
+	 * @param mixed $val
+	 * @return bool
+	 */
 	static public function isMNHcCArray($val) {
 	    return (is_object($val) && $val instanceof MNHcCArray);
 	}
 
+	/**
+	 * Converts $val to a plain PHP array.
+	 * @param mixed $val
+	 * @param bool  $recrusiv  Convert nested values recursively.
+	 * @return array
+	 */
 	static public function toArray($val, $recrusiv = false) {
 	    if (self::isArray($val)) {
 		if (self::isArray($val) == 1) {
@@ -160,6 +231,14 @@ namespace mnhcc\ml\classes {
 	    }
 	}
 
+	/**
+	 * Iterates over $array, passing each (key, value, array) to $func and collecting results.
+	 * The callback may return an associative array with 'key'/'value' to remap the output key.
+	 * @param array    $array
+	 * @param callable $func
+	 * @param array    $return  Collected results (passed by reference).
+	 * @return array
+	 */
 	static public function each(&$array, callable $func, &$return = null) {
 	    $return = [];
 	    foreach ($array as $key => &$val) {

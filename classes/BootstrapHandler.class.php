@@ -329,17 +329,59 @@ namespace mnhcc\ml\classes {
                 self::checkDependencies();
         }
 
-        public static function initial() {
-            if (!self::getRootNamespace())
-		self::setRootNamespace((defined('ROOTNAMESPACE') ? ROOTNAMESPACE : str_replace("\\classes", '', __NAMESPACE__) . NSS));
-	    $extensions = '';
-	    foreach (self::getExtensions() as $ext) {
+        /**
+         * Bootstrap the framework: define global constants, validate environment,
+         * set path constants and register SPL autoloaders.
+         *
+         * @param string|null $rootPath Absolute path to the project root (defaults to the framework classes dir)
+         */
+        public static function initial($rootPath = null) {
+            // PHP version gate
+            $minVersion = '5.4.0';
+            if (!version_compare(PHP_VERSION, $minVersion, '>=')) {
+                die('The program requires PHP ' . $minVersion . ' or higher! PHP ' . PHP_VERSION . ' installed.');
+            }
+
+            // Prevent direct execution without the entry-point constant
+            if (!defined('\\mnhcc\\ml\\INDEX')) {
+                die('Define constant "INDEX" in the "\\mnhcc\\ml\\" namespace before running the program!');
+            }
+
+            // Benchmark timestamp
+            if (!defined('\\mnhcc\\ml\\STARTTIME')) {
+                define('\\mnhcc\\ml\\STARTTIME', microtime(true));
+            }
+
+            // Global shorthand constants (mirrors the namespace-level consts in initial.php)
+            if (!defined('NSS')) { define('NSS', '\\'); }
+            if (!defined('n'))   { define('n',   PHP_EOL); }
+            if (!defined('br'))  { define('br',  "<br />" . PHP_EOL); }
+            if (!defined('php')) { define('php', '.php'); }
+            if (!defined('DS'))  { define('DS',  DIRECTORY_SEPARATOR); }
+
+            // Namespace-qualified br (n is already a namespace const in mnhcc\ml)
+            if (!defined('\\mnhcc\\ml\\br')) {
+                define('\\mnhcc\\ml\\br', "<br />" . PHP_EOL);
+            }
+
+            // Path constants
+            $path = ($rootPath !== null) ? $rootPath : __DIR__;
+            if (!defined('MNHCC_PATH'))              { define('MNHCC_PATH',              $path); }
+            if (!defined('ROOT_PATH'))               { define('ROOT_PATH',               $path); }
+            if (!defined('\\mnhcc\\ml\\MNHCC_PATH')) { define('mnhcc\\ml\\MNHCC_PATH',   $path); }
+
+            // SPL autoloader registration
+            if (!self::getRootNamespace()) {
+                self::setRootNamespace(defined('ROOTNAMESPACE') ? ROOTNAMESPACE : str_replace("\\classes", '', __NAMESPACE__) . NSS);
+            }
+            $extensions = '';
+            foreach (self::getExtensions() as $ext) {
                 $extensions .= $ext . ', ';
             }
             spl_autoload_extensions($extensions);
             spl_autoload_register(__CLASS__ . '::namespaceLoader', true);
             spl_autoload_register(__CLASS__ . '::classLoader', true);
-	    spl_autoload_register(__CLASS__ . '::loadCheck', true);
+            spl_autoload_register(__CLASS__ . '::loadCheck', true);
             self::isInitial(true);
             self::_initialLibrary();
             self::checkDependencies();

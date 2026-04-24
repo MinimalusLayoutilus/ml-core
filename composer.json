@@ -1,5 +1,6 @@
 {
     "name": "mnhcc/ml-core",
+    "version": "0.9.0",
     "description": "Minimalus Layoutilus — core autoloader, base object model, helpers and config",
     "type": "library",
     "license": "LGPL-2.1-only",

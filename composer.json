@@ -1,15 +1,22 @@
 {
     "name": "mnhcc/ml-core",
-    "version": "0.9.0",
     "description": "Minimalus Layoutilus — core autoloader, base object model, helpers and config",
     "type": "library",
     "license": "LGPL-2.1-only",
+    "keywords": ["framework", "autoloader", "mvc", "php54"],
+    "homepage": "https://github.com/carschrotter/ml-core",
     "authors": [
         {
             "name": "Michael Hegenbarth (carschrotter)",
-            "email": "mnh@mn-hegenbarth.de"
+            "email": "mnh@mn-hegenbarth.de",
+            "homepage": "https://github.com/carschrotter",
+            "role": "Developer"
         }
     ],
+    "support": {
+        "issues": "https://github.com/carschrotter/ml-core/issues",
+        "source": "https://github.com/carschrotter/ml-core"
+    },
     "require": {
         "php": ">=5.4"
     },

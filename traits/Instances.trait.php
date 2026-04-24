@@ -70,6 +70,9 @@ namespace mnhcc\ml\traits {
 	protected static function setInstance($instance, $self) {
 	    if($self instanceof self){
 		self::$_instances[$instance] = $self;
+		if ($instance == self::DEFAULTINSTANCE) {
+		    self::$init = true;
+		}
 	    } else {
 		throw new Exception(__class_.'::setInstance() only accept objects from type '.__class_);
 	    }

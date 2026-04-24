@@ -49,11 +49,8 @@ use \mnhcc\ml\interfaces,
 	}
 	
 	public function &cut($str) {
-	    $regex = RegEx::getInstance([
-		    ('^' . RegEx::quote($str) . '(.*)!'),
-		    ('^(.*)' . RegEx::quote($str) . '!'),
-		]);
-	    return self::getInstance($regex->replace('', $str));
+	    $result = preg_replace('~^' . preg_quote($str, '~') . '~', '', $this->__default);
+	    return self::getInstance($result);
 	}
 
 	public function __construct($str = self::__default) {

@@ -235,19 +235,70 @@ namespace mnhcc\ml\classes {
         }
 
 	/**
-	 * 
-	 * @param type $path
-	 * @param type $key
-	 * @param type $using_default
+	 * Register an additional namespace root the framework autoloader will
+	 * search.  Each call appends to the search list — the method is purely
+	 * additive despite its history of being called {@see setIncludePath()}.
+	 *
+	 * The path should be the directory holding `classes/`, `interfaces/`
+	 * and `traits/` for a package using the framework's file naming
+	 * conventions (`Foo.class.php`, `Foo.interface.php`, `Foo.trait.php`).
+	 * `BootstrapHandler::namespaceLoader()` walks every registered root
+	 * when resolving an unmapped FQCN, so a third-party package providing
+	 * `mnhcc\ml\interfaces\…` or `mnhcc\ml\traits\…` only has to call
+	 * `registerPackagePath()` once at boot — typically from the consumer's
+	 * `initial.php`, or automatically via the optional
+	 * `mnhcc/ml-composer-plugin` Composer plugin which writes a generated
+	 * registry file the bootstrap reads on startup.
+	 *
+	 * @param  string      $path           Absolute filesystem path to the
+	 *                                     package root (no trailing slash
+	 *                                     required — trimmed defensively).
+	 * @param  string|null $key            Optional registry key.  When
+	 *                                     null, the entry is appended with
+	 *                                     a numeric key (and `using_default`
+	 *                                     forced to true so it participates
+	 *                                     in `_initialLibrary()` discovery).
+	 *                                     When given, the entry is stored
+	 *                                     under that key — useful when the
+	 *                                     caller wants to update or remove
+	 *                                     a previously-registered path.
+	 * @param  bool        $using_default  Only honoured when `$key` is set.
+	 *                                     Controls whether the path is
+	 *                                     visible to `_initialLibrary()`'s
+	 *                                     `library/load.php` discovery
+	 *                                     pass.  Default `false` because
+	 *                                     keyed entries are usually
+	 *                                     bookkeeping, not library roots.
+	 * @return void
 	 */
-        public static function setIncludePath($path, $key = null, $using_default = false) {
-            $path = rtrim($path, '\\/'); // clean the las slash
+        public static function registerPackagePath($path, $key = null, $using_default = false) {
+            $path = rtrim($path, '\\/'); // clean the last slash
             if (is_null($key)) {
                 self::$_includePaths[] = ['path' => $path, 'using_default' => true];
 	    }
             else {
                 self::$_includePaths[$key] = ['path' => $path, 'using_default' => $using_default];
 	    }
+        }
+
+	/**
+	 * Legacy alias for {@see registerPackagePath()}.  Kept so existing
+	 * callers (mn-hegenbarth.de's `initial.php`, third-party consumers
+	 * pinning ^0.9 of ml-core) keep working without source changes.  Will
+	 * be removed in v1.0.
+	 *
+	 * @deprecated since 0.9.2 — use {@see registerPackagePath()}.  The new
+	 *             name reflects the additive ("register one more")
+	 *             semantics; the old name suggested a single setter, which
+	 *             the implementation has never been.
+	 *
+	 * @param  string      $path
+	 * @param  string|null $key
+	 * @param  bool        $using_default
+	 * @return void
+	 */
+        public static function setIncludePath($path, $key = null, $using_default = false) {
+            self::registerPackagePath($path, $key, $using_default);
         }
 
         public static function getIncludePaths() {

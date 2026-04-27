@@ -7,6 +7,30 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.9.2] — 2026-04-27
+
+### Added
+- **`BootstrapHandler::registerPackagePath($path, $key = null, $using_default = false)`**
+  — primary public name for the additive package-root registry.  Each
+  call appends one more namespace root the framework autoloader will
+  search for `Foo.class.php`, `Foo.interface.php`, `Foo.trait.php` files.
+  Designed for third-party packages that ship `mnhcc\ml\interfaces\…` /
+  `mnhcc\ml\traits\…` and need the framework's SPL loader to find them
+  without going through Composer's classmap (interfaces and traits are
+  not in the classmap of every consumer).
+- `tests/Unit/BootstrapHandlerTest.php` — new suite covering the
+  registry: keyless append, keyed entries, trailing-slash trim, alias
+  identity, and the root-namespace prepend in `getIncludePaths()`.
+
+### Deprecated
+- **`BootstrapHandler::setIncludePath()`** — renamed to
+  `registerPackagePath()` because the implementation has always been
+  additive (`self::$_includePaths[] = …`), never a setter.  The old name
+  remains as a thin alias delegating to the new one and is scheduled for
+  removal in v1.0.  Existing callers (mn-hegenbarth.de's `initial.php`
+  was the last in-tree consumer until 0.9.2) continue to work
+  unchanged.
+
 ## [0.9.1] — 2026-04-27
 
 ### Added

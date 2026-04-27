@@ -169,7 +169,11 @@ namespace mnhcc\ml\classes {
 	 */
 	static public function inRecursive($needle, &$haystack, $strict = false) {
 	    $answer = false;
-	    $func = function($item, $key) use($needle, $strict, $answer) {
+	    // $answer captured by reference — array_walk_recursive's callback
+	    // can only signal "found" by mutating an outer variable.  Without
+	    // the &, the closure's local copy was thrown away on every leaf
+	    // and the function reported `false` even for present needles.
+	    $func = function($item, $key) use($needle, $strict, &$answer) {
 		$check = false;
 		if (self::isArray($needle)) {
 		    $check = (bool) self::in($item, $needle, $strict);

@@ -54,6 +54,19 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   consistently.  Latent issue surfaced by the `raise()` keying fix above:
   with listeners actually firing for the first time, `Event::raise()` ran
   the trait's `toEventParms()` method which then fataled.
+- **`ArrayHelper::inRecursive` always returned `false`.**  The
+  `array_walk_recursive` callback captured the `$answer` accumulator by
+  value, so every "found" signal was thrown away when the closure
+  returned.  Recursive `in()` searches reported "not found" for needles
+  that were genuinely present in nested levels.  `$answer` is now
+  captured by reference; `testIn_recursive_findsNestedValue` covers
+  both the present-needle and missing-needle paths.
+- **`Helper::isJson1('')` reported empty string as valid JSON on PHP 5.6.**
+  `json_decode('')` returns `null` with `JSON_ERROR_NONE` on PHP 5.6,
+  while PHP 7+ correctly reports `JSON_ERROR_SYNTAX` — the helper now
+  short-circuits empty / non-string input so the answer is consistent
+  across supported runtimes.  `testIsJson1_falseForEmptyString` covers
+  the regression.
 - **`traits\Event` no longer calls deprecated `Helper::isArray()`.**
   `setParms()`, `addParms()` and `toEventParms()` now type-check via
   `ArrayHelper::isArray()` directly.  The deprecated wrapper in `Helper`

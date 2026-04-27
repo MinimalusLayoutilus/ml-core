@@ -222,6 +222,12 @@ namespace mnhcc\ml\classes {
 	 * @return bool
 	 */
 	static public function isJson1($string) {
+	    // Empty string is not valid JSON, but json_decode('') reports
+	    // JSON_ERROR_NONE on PHP 5.6 (PHP 7+ returns JSON_ERROR_SYNTAX).
+	    // Short-circuit so the answer is consistent across runtimes.
+	    if (!is_string($string) || $string === '') {
+		return false;
+	    }
 	    json_decode($string);
 	    return (json_last_error() == JSON_ERROR_NONE);
 	}

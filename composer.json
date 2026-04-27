@@ -1,6 +1,6 @@
 {
     "name": "mnhcc/ml-core",
-    "description": "Minimalus Layoutilus — core autoloader, base object model, helpers and config",
+    "description": "Minimalus Layoutilus — core autoloader, base object model, helpers, config and event bus",
     "type": "library",
     "license": "LGPL-2.1-only",
     "keywords": ["framework", "autoloader", "mvc", "php54"],

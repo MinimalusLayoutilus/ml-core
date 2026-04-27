@@ -1,0 +1,91 @@
+# Changelog
+
+All notable changes to this package will be documented in this file.
+
+The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
+this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased] — 2026-04-27
+
+### Added
+- **Read-back convention on `raise()` (Stage B).**  `EventParms`'s class
+  docblock now formalises the contract: listeners may mutate the bag in
+  place via `set()`, and callers are free to read keys back after
+  `EventManager::raise()` returns.  This makes `raise()` a light-weight
+  intervention point — listener edits are visible to the caller without
+  changing any existing call-site that doesn't opt in (read-back falls
+  back to the caller-supplied default).  Two new tests cover the
+  round-trip and the no-listener fallback path.  See
+  `docs/EVENT_SYSTEM.md` §3 Stage B (now delivered).
+- **WordPress-style filter chain on the event bus.**
+  `EventManager::filter(string $name, mixed $value, ?EventParms $context = null)`
+  threads `$value` through every registered listener in priority order
+  (lower priority = earlier).  Listeners receive `($value, $context)` and
+  return the next value; returning `null` is coerced to the previous
+  value (WP "I did nothing" semantics).  Companion API:
+  `EventManager::registerFilter($name, $callback, $priority = 10)`.  First
+  production user is `ContentFilterReplacer` in ml-mvc — see that
+  package's CHANGELOG for the migration.
+- **Listener-exception isolation.**  Both `raise()` and `filter()` now
+  catch listener-thrown exceptions and route them through
+  `Error::report()` (in ml-bugcatcher) so a single bad listener no longer
+  tears down the whole dispatch.  Opt back into the fail-loud legacy
+  behaviour with `EventManager::setStrict(true)` (default off).
+- **Test plumbing.**  `EventManager::resetTestState()` clears the listener
+  registries and the strict flag; `EventManager::getListeners($name = null)`
+  and `EventManager::getFilters($name = null)` give read-only access for
+  test assertions.
+- `docs/EVENT_SYSTEM.md` extended — Stage A (test plumbing + listener
+  isolation) and Stage C (filter chain) marked delivered.
+
+### Fixed
+- **`raise()` lookup key now matches `register()` storage key** —
+  `register()` stored listeners under the lowercase form returned by
+  `Event::setEventName` (which calls `cleanEventName($name, true)`), but
+  `raise()` looked up under the ucfirst form.  Result: listeners
+  registered through the documented API never fired.  `raise()` now uses
+  `cleanEventName($name, true)` to match the storage path, surfacing the
+  long-dormant `Error::onTemplateCreated` listener (registered by
+  ml-bugcatcher's `Error::__construct`).
+- **`traits\Event` namespace resolution.**  References to bare
+  `Helper::isArray` / `Helper::arrayMerge` resolved to the non-existing
+  `mnhcc\ml\traits\Helper` because the trait imports `\mnhcc\ml\classes`
+  but not `\mnhcc\ml\classes\Helper`.  Fixed to use the `classes\` prefix
+  consistently.  Latent issue surfaced by the `raise()` keying fix above:
+  with listeners actually firing for the first time, `Event::raise()` ran
+  the trait's `toEventParms()` method which then fataled.
+- **`traits\Event` no longer calls deprecated `Helper::isArray()`.**
+  `setParms()`, `addParms()` and `toEventParms()` now type-check via
+  `ArrayHelper::isArray()` directly.  The deprecated wrapper in `Helper`
+  triggers `E_USER_DEPRECATED` on every call, which PHPUnit promotes to
+  an exception — so every listener invocation through `Event::raise()`
+  was failing in test runs (the listener-isolation path then masked the
+  real listener body and the testRaise_listenerExceptionDoesNotStopTheChain
+  case never reached its third listener).  Production paths were silently
+  emitting deprecation log entries on every dispatched event.
+
+### Added
+- **Event bus moved here from `ml-bugcatcher`** — `EventManager`,
+  `Event` (+ trait + interface) and the base `EventParms` are now part of
+  ml-core.  The bus is plain dispatcher infrastructure with no error-handling
+  dependencies, so it belongs in core where any package (including the error
+  handler) can build on it.  Same FQCNs (`mnhcc\ml\classes\EventManager`,
+  `mnhcc\ml\classes\Event`, `mnhcc\ml\classes\EventParms`,
+  `mnhcc\ml\interfaces\Event`, `mnhcc\ml\traits\Event`) — no client code
+  changes required.  Specialised payloads stay with the package that produced
+  them (`ExceptionEventParms` in ml-bugcatcher, `Template\EventParms` in ml-mvc).
+- `docs/EVENT_SYSTEM.md` — current behaviour, gaps for the
+  intervention/manipulation use case, and the planned filter-hook extension.
+- `Instances` trait now exposes a `resetTestState()` hook that drops the singleton
+  cache for the calling class. Consumer packages override it to clear their own
+  per-request statics, giving PHPUnit a single entry point to isolate state
+  between test methods.
+
+## [0.9.0] - 2026-04-25
+
+Initial Packagist release. Extracted from the MinimalusLayoutilus skeleton;
+contains the custom SPL autoloader (`BootstrapHandler`), base classes
+(`MNHcC`, `Bootstrap`, `ApplicationConfig`), helpers (`ArrayHelper`, `Helper`,
+`MNHcCString`), traits (`Instances`, `NoInstances`, `MNHcC`, `Prototype`,
+`Event`, `Actions`) and interfaces (`Instances`, `MNHcC`, `Prototype`,
+`Parameters`, `Viewable`).

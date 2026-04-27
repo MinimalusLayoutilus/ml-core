@@ -143,6 +143,23 @@ namespace mnhcc\ml\traits {
 	    return self::$_instances;
 	}
 
+	/**
+	 * Test-only helper.  Drops all cached singleton instances of the using
+	 * class so that the next getInstance() call rebuilds from scratch.
+	 *
+	 * Production code never needs this — singleton state is per-request and
+	 * a fresh PHP process resets it.  PHPUnit, however, runs many tests in
+	 * one process, so isolating the cache is essential.
+	 *
+	 * Subclasses with extra static state (e.g. Template::$_nextTemplateName)
+	 * should override this method, call parent::resetTestState() and clear
+	 * their own slots.
+	 */
+	public static function resetTestState() {
+	    self::$_instances = [];
+	    self::$init       = false;
+	}
+
     }
 
 }

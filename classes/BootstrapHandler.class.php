@@ -361,7 +361,18 @@ namespace mnhcc\ml\classes {
 	}
 	
 	public static function addDependencies($dependencies) {
-	   if(ArrayHelper::isArray($dependencies)) {
+	   // Use the PHP-native check rather than ArrayHelper::isArray so this
+	   // method stays callable from inside __require() / namespaceLoader
+	   // without triggering an autoload of ArrayHelper itself.  When the
+	   // wrapper-loader fires the lifecycle hook for MNHcC (the parent of
+	   // ArrayHelper), MNHcC's ___require() returns its empty default and
+	   // the dispatcher hands it to addDependencies() — at that moment
+	   // ArrayHelper.class.php is still mid-require_once, so calling
+	   // ArrayHelper::isArray() here would trigger a recursive autoload
+	   // and PHP fatals with "Class ArrayHelper not found".  is_array()
+	   // is the strict subset we actually need (an empty / numeric-keyed
+	   // / associative array — no ArrayAccess objects flow into ___require).
+	   if(is_array($dependencies)) {
 	       foreach ($dependencies as $key => $value) {
 		   self::addDependency($key, $value);
 	       }
@@ -430,7 +441,17 @@ namespace mnhcc\ml\classes {
                 $extensions .= $ext . ', ';
             }
             spl_autoload_extensions($extensions);
-            spl_autoload_register(__CLASS__ . '::namespaceLoader', true);
+            // namespaceLoader is prepended so it runs BEFORE Composer's
+            // classmap loader for every class load.  This is the Phase 2
+            // fix for the long-standing dormant-hook problem: Composer's
+            // classmap autoloader sat at the head of the SPL chain, won
+            // every mnhcc\ml\* lookup, and __require() — the place that
+            // invokes the ___onLoaded() / ___require() lifecycle hooks
+            // for classes implementing MNHcC — was never reached.  With
+            // prepend=true plus the prefix filter inside namespaceLoader,
+            // mnhcc\ml\* classes are loaded by us (hooks fire) and
+            // everything else falls through to Composer unchanged.
+            spl_autoload_register(__CLASS__ . '::namespaceLoader', true, true);
             spl_autoload_register(__CLASS__ . '::classLoader', true);
             spl_autoload_register(__CLASS__ . '::loadCheck', true);
             self::isInitial(true);
@@ -560,6 +581,16 @@ namespace mnhcc\ml\classes {
             if (self::_isLoad($name)){
                 return true;
 	    }
+            // Prefix-filter: only handle FQCNs in our own root namespace.
+            // Without this guard the loader walked every registered include
+            // path looking for non-mnhcc classes (Composer's vendor classes,
+            // PSR-4 site code, etc.) — wasted file-stat work on every miss.
+            // With prepend=true registration in initial() the loader now
+            // runs BEFORE Composer for every class load, so a fast bail-out
+            // for non-mnhcc names is essential.
+            if (strpos(ltrim($name, NSS), self::getRootNamespace()) !== 0) {
+                return false;
+            }
             $name = trim($name, NSS);
 
             $key = self::cutRootNamespace($name);

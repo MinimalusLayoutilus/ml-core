@@ -31,9 +31,9 @@ namespace mnhcc\ml\classes {
     abstract class ArrayHelper extends MNHcC {
 
 	/** @var array Registered value converters keyed by class name. */
-	protected $_converters = [];
+	protected static $_converters = [];
 	/** @var array Alias map for converter class names. */
-	protected $_convertersAliases = [];
+	protected static $_convertersAliases = [];
 
 	/**
 	 * Registers a converter callable for a given class.
@@ -41,7 +41,18 @@ namespace mnhcc\ml\classes {
 	 * @param callable $func
 	 */
 	static public function setConverter($class, callable $func){
-	    $_converters[$class] = $func;
+	    self::$_converters[$class] = $func;
+	}
+
+	/**
+	 * Read-only access to the converter registry.  Returned array maps
+	 * each registered class name (e.g. 'ArrayObject') to its converter
+	 * callable.  Keys mirror what `setConverter()` wrote — no transform.
+	 *
+	 * @return array
+	 */
+	static public function getConverters(){
+	    return self::$_converters;
 	}
 	
 	/**

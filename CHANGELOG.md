@@ -7,6 +7,50 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.9.3] — 2026-04-28
+
+### Added
+- **Wrapper-Loader: framework `___onLoaded` / `___require` hooks fire
+  again under Composer.**  `BootstrapHandler::namespaceLoader` is now
+  registered with `prepend=true`, so it runs ahead of Composer's
+  classmap loader for every class load.  A prefix filter
+  (`mnhcc\ml\*`) at the top of `namespaceLoader` keeps the cost out of
+  every non-mnhcc autoload — non-framework FQCNs return false in O(1)
+  and Composer takes over unchanged.  Net effect: the
+  long-dormant `MNHcC::___onLoaded` lifecycle hook (documented as
+  Issue 11 in `MinimalusLayoutilus/ARCHITECTURE_NOTES.md`) is alive
+  again for ml-core classes — `ArrayHelper::___onLoaded()`'s
+  `ArrayObject` / `MNHcCArray` converters actually register on first
+  load, `Bootstrap::___onLoaded()`'s `APPLICATIONNAMESPACE` default
+  is set, etc.
+- **`ArrayHelper::getConverters()`** — read-only access to the
+  converter registry.  Lets test suites and consumer code introspect
+  what was registered via `setConverter()`.
+- Phase-3 (auto-discovery via Composer plugin) follows in v0.9.4 to
+  extend the same hook coverage to ml-bugcatcher / ml-mvc / ml-* —
+  today they still go through Composer's classmap because
+  `getIncludePaths()` only sees ml-core by default.
+
+### Fixed
+- **`ArrayHelper::setConverter` was a silent no-op** — wrote to a
+  function-local `$_converters` because the variable was missing the
+  `self::` prefix, and `$_converters` itself was declared as a non-
+  static instance property on an abstract utility class with only
+  static methods.  Both bugs are fixed: the property is `protected
+  static` and the method writes to `self::$_converters`.  This was
+  paper-over-able while the `___onLoaded` hook stayed dormant; now
+  that the hook fires again, the no-op would have been load-bearing.
+- **`BootstrapHandler::addDependencies()` no longer recurses into
+  `ArrayHelper::isArray()`** — when the hook fires for `MNHcC` (the
+  parent class autoloaded by `extends MNHcC` during ArrayHelper's
+  own require_once), `MNHcC::___require()` returns `[]` and the
+  dispatcher hands it to `addDependencies()`.  Calling
+  `ArrayHelper::isArray()` from there would re-trigger autoload of
+  ArrayHelper — already mid-load — and PHP fatals "Class
+  ArrayHelper not found".  Switched to the PHP-native `is_array()`
+  check; addDependencies needs the strict subset anyway (no
+  `ArrayAccess` payloads ever flow through `___require`).
+
 ## [0.9.2] — 2026-04-27
 
 ### Added

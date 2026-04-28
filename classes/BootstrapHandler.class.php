@@ -455,8 +455,52 @@ namespace mnhcc\ml\classes {
             spl_autoload_register(__CLASS__ . '::classLoader', true);
             spl_autoload_register(__CLASS__ . '::loadCheck', true);
             self::isInitial(true);
+            self::_loadGeneratedPackageRegistry();
             self::_initialLibrary();
             self::checkDependencies();
+        }
+
+        /**
+         * Read the generated package manifest written by
+         * `mnhcc/ml-composer-plugin` (when installed) and register every
+         * listed package path so the framework's autoloader sees what
+         * Composer just installed.  Fail-soft — when the plugin is not
+         * present (composer-less deploy, plugin not yet installed, plugin
+         * disabled) the manifest is absent and the framework falls back
+         * to whatever paths a consumer registered manually.
+         *
+         * Manifest convention: `<vendor>/composer/mnhcc-ml-packages.php`,
+         * a single `return [packageName => absolutePath]` array.  See
+         * the plugin's README for the full marker / discovery contract.
+         *
+         * Layout note: ml-core lives at `<vendor>/mnhcc/ml-core/` when
+         * installed via Composer, so from this file's directory
+         * (`<vendor>/mnhcc/ml-core/classes/`) the manifest is four
+         * levels up + `composer/mnhcc-ml-packages.php`.  For non-Composer
+         * deployments (developing ml-core in isolation) the path simply
+         * does not resolve and the early-return below kicks in.
+         *
+         * @return void
+         */
+        protected static function _loadGeneratedPackageRegistry() {
+            $base = dirname(self::path);                        // <vendor>/mnhcc/ml-core/classes
+            $candidate = $base . '/../../../composer/mnhcc-ml-packages.php';
+            if (!is_file($candidate)) {
+                return;
+            }
+            try {
+                $packages = include $candidate;
+            } catch (\Exception $exc) {
+                return;
+            }
+            if (!is_array($packages)) {
+                return;
+            }
+            foreach ($packages as $name => $path) {
+                if (is_string($path) && '' !== $path) {
+                    self::registerPackagePath($path);
+                }
+            }
         }
 
         protected static function _initialLibrary() {

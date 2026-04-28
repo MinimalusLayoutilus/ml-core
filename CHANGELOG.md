@@ -7,6 +7,37 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.9.4] — 2026-04-28
+
+### Added
+- **Auto-discovery of installed ml-* packages.**
+  `BootstrapHandler::initial()` now calls a new
+  `_loadGeneratedPackageRegistry()` step after the SPL autoloader
+  registrations.  When the optional `mnhcc/ml-composer-plugin` is
+  installed, it has written
+  `<vendor>/composer/mnhcc-ml-packages.php` — a flat `[name => path]`
+  array — on the most recent `composer install` / `update` /
+  `dump-autoload`.  The bootstrap reads that file and calls
+  `registerPackagePath()` for every entry, so the framework's
+  autoloader sees every Minimalus Layoutilus package Composer just
+  installed without a manual call from the consumer's `initial.php`.
+- This closes the gap left by Phase 2 (v0.9.3): the wrapper-loader
+  could fire lifecycle hooks for any class it could find through
+  `getIncludePaths()`, but the registry only saw ml-core by default.
+  v0.9.4 makes the registry self-populate from Composer, so the same
+  hook story applies to ml-bugcatcher, ml-mvc, ml-filepages and any
+  future ml-* sibling.
+
+### Compatibility
+- The new step is fail-soft.  When the plugin is not installed
+  (composer-less deploy, plugin not yet pulled in, plugin disabled
+  via `config.allow-plugins`) the manifest file is absent and
+  `_loadGeneratedPackageRegistry()` returns silently — the framework
+  falls back to whatever paths the consumer registered manually.
+- Manual `BootstrapHandler::registerPackagePath()` calls continue to
+  work alongside plugin-discovered entries; both write into the same
+  underlying registry.
+
 ## [0.9.3] — 2026-04-28
 
 ### Added

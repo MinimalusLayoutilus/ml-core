@@ -7,6 +7,56 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.9.5] — 2026-04-28
+
+### Fixed — PHP 8.x compatibility (verified live on PHP 8.5)
+- **`BootstrapHandler::__require()` no longer fatals on PHP 8.x.**
+  The lifecycle-hook dispatcher called
+  `(new \ReflectionMethod($name, '___onLoaded'))->invoke($name)` —
+  passing the class-name string into the parent's first slot.
+  PHP 8 enforces `?object` on that slot and fataled with
+  "Argument #1 (\$object) must be of type ?object, string given"
+  on the very first hook firing under PHP 8.5 in `mn-hegenbarth.de`.
+  `___onLoaded()` and `___require()` are static methods, the
+  ReflectionMethod is already bound to the class via the
+  `($name, $methodName)` ctor — `invoke(null)` is the right call on
+  every supported runtime.
+- **`Filter::input` no longer triggers `E_DEPRECATED` on PHP 8.1+.**
+  `filter_input()`'s fourth parameter (`$options`) tightened to
+  `array|int` in PHP 8.1; passing `null` (the historical default)
+  prints "Passing null to parameter #4 (\$options) of type array|int
+  is deprecated".  Default changed from `NULL` to `0` (no flags),
+  matching PHP's own internal default.
+
+### Added — PHP 8.2+ dynamic-property opt-in
+- `MNHcC` (abstract base), `EventParms` and `Config` carry the
+  `#[\AllowDynamicProperties]` attribute.  PHP 5.6 / 7.x parse the
+  line as a `#`-comment (single-line comment syntax — no parse
+  error); PHP 8.0+ honour it as a real attribute and stop emitting
+  `E_DEPRECATED` on dynamic property creation against any descendant
+  (the framework's `__call`-based magic and the `EventParms` bag
+  pattern would otherwise drown PHP 8.2+ logs in deprecation
+  warnings).  `Config` carries the attribute directly because it
+  extends `\ArrayObject` rather than the framework's `MNHcC` base —
+  an inherited `#[\AllowDynamicProperties]` would not apply.
+
+### Fixed — `traits\ArrayAccess` LSP under PHP 8.1+
+- `offsetGet` / `offsetSet` / `offsetExists` / `offsetUnset` stamped
+  with `#[\ReturnTypeWillChange]`.  `ArrayAccess`'s interface
+  methods grew explicit return types in PHP 8 (`offsetGet(): mixed`,
+  `offsetExists(): bool`, etc.).  Without the attribute every class
+  using the trait fired a deprecation on each load.  No semantic
+  change; the trait already returned the right values.
+
+### Compatibility
+- Framework's PHP floor stays at 5.6.  All fixes use 5.6-syntactic
+  constructs; the `#[…]`-attributes are forward- AND backward-
+  compatible because PHP <8.0 parses `#` as a comment.
+- Skeleton (`MinimalusLayoutilus`) on PHP 5.6 in DDEV: byte-identical
+  to baseline.  `mn-hegenbarth.de` on PHP 8.5: page renders, content
+  delivered (HTTP 200, structurally matches the 5.6 baseline aside
+  from a counter-service idiosyncrasy unrelated to this commit).
+
 ## [0.9.4] — 2026-04-28
 
 ### Added

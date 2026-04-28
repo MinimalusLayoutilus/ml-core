@@ -27,9 +27,10 @@ namespace mnhcc\ml\classes {
      * Description of Config
      * 
      * @author Michael Hegenbarth (carschrotter)
-     * @package MinimalusLayoutilus	
+     * @package MinimalusLayoutilus
      * @copyright (c) 2013, Michael Hegenbarth
      */
+    #[\AllowDynamicProperties]
     class Config extends \ArrayObject implements interfaces\MNHcC, interfaces\MNHcCArray, \ArrayAccess, interfaces\Instances {
 	
 	use traits\MNHcC,

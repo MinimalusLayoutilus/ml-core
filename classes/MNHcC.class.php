@@ -35,8 +35,9 @@ namespace mnhcc\ml\classes {
      * @author Michael Hegenbarth (carschrotter)
      * @package MinimalusLayoutilus
      * @copyright (c) 2012, Michael Hegenbarth
-     * @license GPL  
+     * @license GPL
      */
+    #[\AllowDynamicProperties]
     abstract class MNHcC implements interfaces\MNHcC, interfaces\Instances {
 
 	use traits\MNHcC;

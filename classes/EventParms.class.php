@@ -50,6 +50,7 @@ namespace mnhcc\ml\classes {
      *
      * @author carschrotter
      */
+    #[\AllowDynamicProperties]
     class EventParms extends MNHcC implements interfaces\Parameters {
 
 	use traits\NoInstances;

@@ -14,17 +14,21 @@ namespace mnhcc\ml\traits {
      */
     trait ArrayAccess {
 	protected $_store = [];
-	
+
+	#[\ReturnTypeWillChange]
 	public function offsetGet($offset) {
 	    return $this->_store[$offset];
 	}
+	#[\ReturnTypeWillChange]
 	public function offsetSet($offset, $value) {
 	    $this->_store[$offset] = $value;
 	    return $this;
 	}
+	#[\ReturnTypeWillChange]
 	public function offsetExists($offset) {
 	    return \key_exists($offset, $this->_store);
 	}
+	#[\ReturnTypeWillChange]
 	public function offsetUnset($offset) {
 	    unset($this->_store[$offset]);
 	    return $this;

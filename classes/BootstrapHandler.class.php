@@ -688,12 +688,19 @@ namespace mnhcc\ml\classes {
 		    if ($typeNamespace == self::getClassNamespaceRoot()) {
 			$class = new \ReflectionClass($name);
 			if ($class->implementsInterface($interface)) {
-			    (new \ReflectionMethod($name, '___onLoaded'))->invoke($name);
-			    self::addDependencies((new \ReflectionMethod($name, '___require'))->invoke($name));
+			    // ___onLoaded() / ___require() are static; ReflectionMethod
+			    // is already bound to the class via the ($name, $method)
+			    // ctor.  Passing $name as the object argument worked on
+			    // PHP 5.6 (first arg was permissive) but PHP 8.0+ enforces
+			    // ?object — passing a class-name string fatals with
+			    // "Argument #1 ($object) must be of type ?object, string
+			    // given".  Use null on both runtimes.
+			    (new \ReflectionMethod($name, '___onLoaded'))->invoke(null);
+			    self::addDependencies((new \ReflectionMethod($name, '___require'))->invoke(null));
 			}
 		    }
 		} catch (\Exception $exc) {
-		    
+
 		}
 		return true;
             } else {

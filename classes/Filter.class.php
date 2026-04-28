@@ -54,11 +54,15 @@ namespace mnhcc\ml\classes {
 	    
 	}
 
-	public static function input($type, $variable_name, $filter = FILTER_DEFAULT, $options = NULL) {
+	public static function input($type, $variable_name, $filter = FILTER_DEFAULT, $options = 0) {
 	    if (function_exists('\\filter_input')) {
+		// PHP 8 deprecated passing null for $options — type is now
+		// `array|int`.  Default `0` here matches PHP's own internal
+		// default (no flags) and keeps callers that previously
+		// passed `null` working without per-call source changes.
 		return \filter_input(constant('INPUT_' . strtoupper($type)), $variable_name, $filter, $options);
 	    } else {
-		
+
 	    }
 	}
 

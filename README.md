@@ -1,5 +1,9 @@
 # mnhcc/ml-core
 
+[![PHP 7.4](https://github.com/MinimalusLayoutilus/ml-core/actions/workflows/ci-php74.yml/badge.svg)](https://github.com/MinimalusLayoutilus/ml-core/actions/workflows/ci-php74.yml)
+[![PHP 8.1](https://github.com/MinimalusLayoutilus/ml-core/actions/workflows/ci-php81.yml/badge.svg)](https://github.com/MinimalusLayoutilus/ml-core/actions/workflows/ci-php81.yml)
+[![PHP 8.5](https://github.com/MinimalusLayoutilus/ml-core/actions/workflows/ci-php85.yml/badge.svg)](https://github.com/MinimalusLayoutilus/ml-core/actions/workflows/ci-php85.yml)
+
 Core package of the Minimalus Layoutilus PHP framework.
 
 Provides the custom SPL autoloader (`BootstrapHandler`), base object model (`MNHcC`, `Bootstrap`),

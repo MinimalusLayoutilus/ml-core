@@ -124,7 +124,7 @@ class HelperTest extends TestCase
     public function testGenerateLegitimer_returnsAlphabeticString()
     {
         $result = Helper::generateLegitimer(5);
-        $this->assertRegExp('/^[a-z]+$/', $result);
+        $this->assertMatchesRegularExpression('/^[a-z]+$/', $result);
     }
 
     public function testGenerateLegitimer_respectsCustomLength()

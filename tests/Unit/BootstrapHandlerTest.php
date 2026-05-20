@@ -23,7 +23,7 @@ class BootstrapHandlerTest extends TestCase
      */
     private $_includePathsRef;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->_includePathsRef = new \ReflectionProperty(
             'mnhcc\\ml\\classes\\BootstrapHandler',
@@ -33,7 +33,7 @@ class BootstrapHandlerTest extends TestCase
         $this->_includePathsRef->setValue(null, []);
     }
 
-    protected function tearDown()
+    protected function tearDown(): void
     {
         // Leave the registry empty so other test classes that touch
         // BootstrapHandler do not inherit residue.

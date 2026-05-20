@@ -23,13 +23,13 @@ class EventManagerTest extends TestCase
     /** @var int */
     private $_obEntryLevel;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         EventManager::resetTestState();
         $this->_obEntryLevel = ob_get_level();
     }
 
-    protected function tearDown()
+    protected function tearDown(): void
     {
         // _reportListenerFailure may instantiate Error, whose __construct
         // opens an ob_start() for blank-screen protection that's never
@@ -51,7 +51,7 @@ class EventManagerTest extends TestCase
         $this->assertSame($expected, EventManager::cleanEventName($input, $asKey));
     }
 
-    public function provideCleanEventNameCases()
+    public static function provideCleanEventNameCases()
     {
         return [
             'on prefix ucfirst'            => ['onClick',    false, 'Click'],
